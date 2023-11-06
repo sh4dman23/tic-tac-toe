@@ -9,11 +9,44 @@
     </head>
     <body>
         <header>
-            <p class="big-bold">XOXO</p>
-            <div id="playerTurn" class="player-turn big-bold">Player 1's Turn</div>
-            <button>Restart</button>
+            TIC TAC TOE
         </header>
-        <main></main>
+        <main>
+
+            <div id="board" class="board">
+                <div class="board-row">
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                </div>
+                <div class="board-row">
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                </div>
+                <div class="board-row">
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                </div>
+            </div>
+            <div id="round-result" class="round-result">Player 1 wins the game!</div>
+            <div class="counts">
+                <div class="count">
+                    <h4>Player 1</h4>
+                    <p>2</p>
+                </div>
+                <div class="count">
+                    <h4>Ties</h4>
+                    <p>0</p>
+                </div>
+                <div class="count">
+                    <h4>Player 2</h4>
+                    <p>1</p>
+                </div>
+            </div>
+            <button id="restart-button" class="restart-button">Restart</button>
+        </main>
         <footer></footer>
     </body>
 </html>

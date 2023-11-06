@@ -1,7 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;700;800&family=Quicksand:wght@600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Quicksand:wght@600;700&display=swap');
 
 :root {
-    --background-color: #fafafa;
+    --background-color: #f5f5f5;
+    --dark-color: #404040;
 }
 
 * {
@@ -10,11 +11,130 @@
     box-sizing: border-box;
 }
 
+svg {
+    height: 1.5em;
+    position: relative;
+    top: 0.4em;
+}
+
 body {
+    color: var(--dark-color);
     font-family: "Poppins", system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     background-color: var(--background-color);
 }
 
 header {
+    font-weight: 700;
+    font-size: 3rem;
     font-family: "Quicksand", "Poppins", system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    padding: 2rem 0 1rem;
+    text-align: center;
+}
+
+main {
+    padding-bottom: 2rem;
+}
+
+.round-result {
+    text-align: center;
+    font-weight: 500;
+    font-size: 1.2rem;
+}
+
+.board, .board * {
+    border-collapse: collapse;
+}
+
+.main-container {
+    min-width: 60%;
+}
+
+.board {
+    margin: 1rem auto 2rem;
+    height: 300px;
+    width: 300px;
+    display: grid;
+    grid-template-rows: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.board-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.cell {
+    border: 2px solid var(--dark-color);
+    border-radius: 8px;
+    transition: 150ms all ease-in-out;
+    font-size: 3em;
+    font-weight: 700;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.cell.x, .cell.o {
+    pointer-events: none;
+}
+
+.cell:not(.x):not(.o) {
+    cursor: pointer;
+}
+
+.cell:not(.x):not(.o):hover, .restart-button:hover {
+    border-color: #000;
+    transform: scale(102%);
+}
+
+.cell:not(.x):not(.o):active, .restart-button:active {
+    transform: scale(99%) translateY(2px);
+}
+
+.cell.x::after {
+    content: "X";
+}
+
+.cell.o::after {
+    content: "O";
+}
+
+.counts {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    width: max(50%, 300px);
+    margin: 2rem auto;
+    place-items: center;
+    text-align: center;
+}
+
+.count {
+    height: 100%;
+    width: 90%;
+    border: 2px solid var(--dark-color);
+    border-radius: 10px;
+    padding: 0.5rem 0;
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.count h4 {
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.restart-button {
+    cursor: pointer;
+    display: block;
+    margin: auto;
+    padding: 1rem 1.5rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+    letter-spacing: 1.1px;
+    color: var(--background-color);
+    background-color: var(--dark-color);
+    border: none;
+    border-radius: 10px;
+    transition: 150ms all ease-in-out;
 }
