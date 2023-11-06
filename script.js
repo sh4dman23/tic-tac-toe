@@ -24,9 +24,6 @@ function createPlayer(playerNumber) {
     };
 }
 
-// Make the game object a global variable
-const globalGame = createGameManager();
-
 function createGameManager() {
     // Two dimensional array of empty items that can be accessed by gameBoard[row][column] (both are indexed from 0)
     let gameBoard = [[, , ,], [, , ,], [, , ,]];
@@ -156,3 +153,36 @@ function createGameManager() {
 
     return {getBoard, getGameStatus, getCurrentRound, getMoveCounts, getPlayers, getActivePlayer, makeMove, restartGame};
 }
+
+function createDisplayManager() {
+    const board = document.querySelector('.board');
+    board.addEventListener('click', event => {
+        if (gameManager.getGameStatus() !== true) {
+            return;
+        }
+        if (event.target.classList.contains('cell')) {
+            const cell = event.target;
+            const rowParent = cell.parentNode;
+
+            const moveColumn = Array.from(rowParent.children).indexOf(cell);
+            const moveRow = Array.from(rowParent.parentNode.children).indexOf(rowParent);
+
+            const roundResult = gameManager.makeMove(moveRow, moveColumn);
+            if (roundResult === false) {
+                return;
+            }
+
+            markCell(cell, gameManager.getActivePlayer());
+        }
+    });
+
+    function markCell(cell, playerMarker) {
+        cell.classList.add(`${playerMarker}`);
+    };
+}
+
+// Manages all the functions related to playing the game
+let gameManager = createGameManager();
+
+// Manages all the functions related to changing the display
+const displayManager = createDisplayManager();
