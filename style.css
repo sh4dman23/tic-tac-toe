@@ -138,3 +138,7 @@ main {
     border-radius: 10px;
     transition: 150ms all ease-in-out;
 }
+
+.disabled {
+    pointer-events: none;
+}

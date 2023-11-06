@@ -54,7 +54,7 @@ function createGameManager() {
         totalMoveCount = 0;
         player[0].reset();
         player[1].reset();
-        activePlayer = currentRound % 2 === 0 ? 1 : 0;
+        activePlayer = 0;
         currentRound++;
     }
 
@@ -76,25 +76,24 @@ function createGameManager() {
     const getPlayers = () => player;
     const getActivePlayer = () => activePlayer;
 
-    // For console testing
     const makeMove = (moveRow, moveColumn) => {
         if (!gameOngoing || ![0, 1, 2].includes(moveRow) || ![0, 1, 2].includes(moveColumn) || gameBoard[moveRow][moveColumn] !== undefined) {
             return false;
         }
 
-        const resultObject = {gameEnd: false, winner: null, round: currentRound + 1};
+        const resultObject = {gameEnd: false, winner: null, round: currentRound};
 
         registerMove(moveRow, moveColumn);
-
-        // Update active player
-        activePlayer = activePlayer === 0 ? 1 : 0;
 
         // Check for winner after registering move
         const moveResult = checkWin();
 
+        // Update active player
+        updateActivePlayer();
+
         // If game ended, let the player know
         if (moveResult.roundEnd) {
-            if (moveResult.winner) {
+            if (moveResult.winner !== undefined) {
                 player[moveResult.winner].increaseWinCount();
                 resultObject.winner = moveResult.winner;
             }
@@ -106,12 +105,15 @@ function createGameManager() {
                 resultObject.winner = gameWinner;
                 gameOngoing = false;
             }
-
             newRound();
         }
 
         return resultObject;
     };
+
+    function updateActivePlayer() {
+        activePlayer = activePlayer === 0 ? 1 : 0;
+    }
 
     function registerMove (moveRow, moveColumn) {
         // Stores which player made a move in that cell
@@ -128,7 +130,7 @@ function createGameManager() {
         }
 
         // Cells along one diagonal are equal
-        if (gameBoard[1][1] !== undefined && (gameBoard[0][0] === gameBoard[1][1] && gameBoard[1][1] === gameBoard[2][2] || gameBoard[2][0] === gameBoard[1][1] === gameBoard[0][2])) {
+        if (gameBoard[1][1] !== undefined && (gameBoard[0][0] === gameBoard[1][1] && gameBoard[1][1] === gameBoard[2][2] || gameBoard[2][0] === gameBoard[1][1] && gameBoard[1][1] === gameBoard[0][2])) {
             moveResult.roundEnd = true;
             moveResult.winner = gameBoard[1][1];
         } else {
@@ -155,30 +157,60 @@ function createGameManager() {
 }
 
 function createDisplayManager() {
-    const board = document.querySelector('.board');
+    const board = document.querySelector('#board');
+    const resultDisplay = document.querySelector('#round-result');
+
     board.addEventListener('click', event => {
         if (gameManager.getGameStatus() !== true) {
             return;
         }
         if (event.target.classList.contains('cell')) {
+            toggleBoardEventListeners();
+
             const cell = event.target;
             const rowParent = cell.parentNode;
 
             const moveColumn = Array.from(rowParent.children).indexOf(cell);
             const moveRow = Array.from(rowParent.parentNode.children).indexOf(rowParent);
 
+            const player = gameManager.getActivePlayer();
             const roundResult = gameManager.makeMove(moveRow, moveColumn);
+
             if (roundResult === false) {
+                toggleBoardEventListeners();
                 return;
+            } else {
+                const playerMarker = gameManager.getPlayers()[player].playerMarker;
+                markCell(cell, playerMarker);
             }
 
-            markCell(cell, gameManager.getActivePlayer());
+            if (roundResult.gameEnd === true) {
+                resultDisplay.textContent = `Player ${roundResult.winner + 1} won the game!`;
+            } else if (roundResult.winner !== null) {
+                resultDisplay.textContent = `Player ${roundResult.winner + 1} won the round!`;
+                clearBoard();
+            }
+
+            toggleBoardEventListeners();
         }
     });
 
+    function toggleBoardEventListeners() {
+        board.classList.toggle('disabled');
+    }
+
     function markCell(cell, playerMarker) {
         cell.classList.add(`${playerMarker}`);
-    };
+    }
+
+    function clearBoard() {
+        document.querySelectorAll('.cell').forEach(cell => {
+            cell.classList.remove('o', 'x');
+            console.log(cell.classList);
+        });
+    }
+
+    return {markCell};
 }
 
 // Manages all the functions related to playing the game
