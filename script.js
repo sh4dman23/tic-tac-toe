@@ -1,31 +1,34 @@
-function createPlayer(playerName, playerNumber) {
-    let name = playerName, number = playerNumber, winCount = 0;
-    return {
-        playerMarker: playerNumber === 0 ? 'x' : 'o',
-        getPlayerName() {
-            return name;
-        },
-        getPlayerNumber() {
-            return number;
-        },
-        getPlayerWinCount() {
-            return winCount;
-        }, increasePlayerWinCount() {
-            winCount += 1;
-        },
-        reset() {
-            winCount = 0;
-        }
+function createPlayer(playerNumber) {
+    let number = playerNumber, winCount = 0;
+    const playerMarker = playerNumber === 0 ? 'x' : 'o';
+
+    const getPlayerNumber = () => {
+        return number;
     };
+
+    const getPlayerWinCount = () => {
+        return winCount;
+    };
+
+    const increasePlayerWinCount = () => {
+        winCount += 1;
+    };
+
+    const reset = () => {
+        winCount = 0;
+    };
+
+    return {playerMarker, getPlayerNumber, getPlayerWinCount, increasePlayerWinCount, reset};
 }
 
-function createGameManager() {
+// Manages all the functions related to playing the game
+const gameManager = (function () {
     // Two dimensional array of empty items that can be accessed by gameBoard[row][column] (both are indexed from 0)
     let gameBoard = [[, , ,], [, , ,], [, , ,]];
     let totalMoveCount = 0;
 
     // player[0] is referred to as playerOne and player[1] as playerTwo in the game as well as in the comments below
-    let player = [createPlayer('Player 1', 0), createPlayer('Player 2', 1)];
+    let player = [createPlayer(0), createPlayer(1)];
 
     // PlayerOne moves first
     let activePlayer = 0;
@@ -86,7 +89,6 @@ function createGameManager() {
         if (moveResult.roundEnd === true) {
             if (moveResult.winner !== null) {
                 player[moveResult.winner].increasePlayerWinCount();
-                console.log(moveResult.winner, player[moveResult.winner].getPlayerWinCount());
             }
 
             toggleGameStatus(false);
@@ -139,10 +141,11 @@ function createGameManager() {
         return moveResult;
     }
 
-    return {getBoard, getGameStatus, getCurrentRound, getMoveCounts, getPlayers, getActivePlayer, makeMove, newRound, restartGame};
-}
+    return {getGameStatus, getCurrentRound, getMoveCounts, getPlayers, getActivePlayer, makeMove, newRound, restartGame};
+})();
 
-function createDisplayManager() {
+// Manages all the functions related to changing the display
+const displayManager = (function () {
     const board = document.querySelector('#board');
     const resultDisplay = document.querySelector('#round-result');
     const buttons = document.querySelector('.buttons');
@@ -159,7 +162,6 @@ function createDisplayManager() {
     function clearBoard() {
         document.querySelectorAll('.cell').forEach(cell => {
             cell.classList.remove('o', 'x');
-            console.log(cell.classList);
         });
     }
 
@@ -178,9 +180,9 @@ function createDisplayManager() {
             const moveRow = Array.from(rowParent.parentNode.children).indexOf(rowParent);
 
             const moveByPlayer = gameManager.getActivePlayer();
-            const roundResult = gameManager.makeMove(moveRow, moveColumn);
+            const moveResult = gameManager.makeMove(moveRow, moveColumn);
 
-            if (roundResult === false) {
+            if (moveResult === false) {
                 toggleBoardEventListeners('initial');
                 return;
             } else {
@@ -189,11 +191,11 @@ function createDisplayManager() {
             }
 
             // Board event listeners will stay turned off if the round ended until new round starts
-            if (roundResult.roundEnd === true) {
-                if (roundResult.winner !== null) {
-                    const player = gameManager.getPlayers()[roundResult.winner];
-                    scores[roundResult.winner === 1 ? 2 : 0].textContent = player.getPlayerWinCount();
-                    resultDisplay.textContent = `${player.getPlayerName()} won the round!`;
+            if (moveResult.roundEnd === true) {
+                if (moveResult.winner !== null) {
+                    const player = gameManager.getPlayers()[moveResult.winner];
+                    scores[moveResult.winner === 1 ? 2 : 0].textContent = player.getPlayerWinCount();
+                    resultDisplay.textContent = `Player ${moveResult.winner + 1} won the round!`;
                 } else {
                     scores[1].textContent = Number(scores[1].textContent) + 1;
                     resultDisplay.textContent = 'It\'s a tie!';
@@ -206,35 +208,33 @@ function createDisplayManager() {
 
     function startNewRound() {
         clearBoard();
+        const gameWasOngoing = gameManager.getGameStatus();
         gameManager.newRound();
-        resultDisplay.textContent = '';
+        resultDisplay.textContent = `Round ${gameManager.getCurrentRound()}`;
+        if (gameWasOngoing === true) {
+            scores[1].textContent = Number(scores[1].textContent) + 1;
+        }
         toggleBoardEventListeners('initial');
     }
 
     function restartGame() {
         clearBoard();
         gameManager.restartGame();
+        resultDisplay.textContent = `Round ${gameManager.getCurrentRound()}`;
         scores.forEach(score => score.textContent = '0');
-        resultDisplay.textContent = '';
         toggleBoardEventListeners('initial');
     }
 
-    board.addEventListener('click', event => processMove(event));
+    return {board, buttons, processMove, startNewRound, restartGame};
+})();
 
-    buttons.addEventListener('click', event => {
-        const target = event.target;
-        if (target.id === 'new-round') {
-            startNewRound();
-        } else if (target.id === 'restart-game') {
-            restartGame();
-        }
-    });
+displayManager.board.addEventListener('click', event => displayManager.processMove(event));
 
-    return {markCell};
-}
-
-// Manages all the functions related to playing the game
-let gameManager = createGameManager();
-
-// Manages all the functions related to changing the display
-const displayManager = createDisplayManager();
+displayManager.buttons.addEventListener('click', event => {
+    const target = event.target;
+    if (target.id === 'new-round') {
+        displayManager.startNewRound();
+    } else if (target.id === 'restart-game') {
+        displayManager.restartGame();
+    }
+});
