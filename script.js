@@ -1,24 +1,19 @@
-const MAXROUNDS = 3;
-
-function createPlayer(playerNumber) {
-    let playerMoveCount = 0, winCount = 0;
+function createPlayer(playerName, playerNumber) {
+    let name = playerName, number = playerNumber, winCount = 0;
     return {
-        playerNumber,
         playerMarker: playerNumber === 0 ? 'x' : 'o',
-        getPlayerMoveCount() {
-            return playerMoveCount;
+        getPlayerName() {
+            return name;
         },
-        increasePlayerMoveCount() {
-            playerMoveCount++;
+        getPlayerNumber() {
+            return number;
         },
-        getWinCount() {
+        getPlayerWinCount() {
             return winCount;
-        },
-        increaseWinCount() {
-            winCount++;
+        }, increasePlayerWinCount() {
+            winCount += 1;
         },
         reset() {
-            playerMoveCount = 0;
             winCount = 0;
         }
     };
@@ -30,7 +25,7 @@ function createGameManager() {
     let totalMoveCount = 0;
 
     // player[0] is referred to as playerOne and player[1] as playerTwo in the game as well as in the comments below
-    let player = [createPlayer(0), createPlayer(1)];
+    let player = [createPlayer('Player 1', 0), createPlayer('Player 2', 1)];
 
     // PlayerOne moves first
     let activePlayer = 0;
@@ -41,21 +36,17 @@ function createGameManager() {
 
     const restartGame = () => {
         newRound();
-        currentRound = 1;
-        gameOngoing = true;
-    }
-
-    function newRound() {
-        if (currentRound === MAXROUNDS) {
-            return;
-        }
-
-        gameBoard = [[, , ,], [, , ,], [, , ,]];
-        totalMoveCount = 0;
         player[0].reset();
         player[1].reset();
+        currentRound = 1;
+    }
+
+    const newRound = () => {
+        gameBoard = [[, , ,], [, , ,], [, , ,]];
+        totalMoveCount = 0;
         activePlayer = 0;
         currentRound++;
+        toggleGameStatus(true);
     }
 
     // Get status of the game (whether it is ongoing or has ended)
@@ -81,35 +72,32 @@ function createGameManager() {
             return false;
         }
 
-        const resultObject = {gameEnd: false, winner: null, round: currentRound};
-
         registerMove(moveRow, moveColumn);
 
         // Check for winner after registering move
         const moveResult = checkWin();
 
+        const resultObject = Object.assign({}, moveResult);
+
         // Update active player
         updateActivePlayer();
 
         // If game ended, let the player know
-        if (moveResult.roundEnd) {
-            if (moveResult.winner !== undefined) {
-                player[moveResult.winner].increaseWinCount();
-                resultObject.winner = moveResult.winner;
+        if (moveResult.roundEnd === true) {
+            if (moveResult.winner !== null) {
+                player[moveResult.winner].increasePlayerWinCount();
+                console.log(moveResult.winner, player[moveResult.winner].getPlayerWinCount());
             }
 
-            // Game has ended
-            if (currentRound === MAXROUNDS) {
-                const gameWinner = player[0].getWinCount() > player[1].getWinCount() ? 0 : 1;
-                resultObject.gameEnd = true;
-                resultObject.winner = gameWinner;
-                gameOngoing = false;
-            }
-            newRound();
+            toggleGameStatus(false);
         }
 
         return resultObject;
     };
+
+    function toggleGameStatus(status) {
+        gameOngoing = status;
+    }
 
     function updateActivePlayer() {
         activePlayer = activePlayer === 0 ? 1 : 0;
@@ -117,10 +105,9 @@ function createGameManager() {
 
     function registerMove (moveRow, moveColumn) {
         // Stores which player made a move in that cell
-        gameBoard[moveRow][moveColumn] = player[activePlayer].playerNumber;
+        gameBoard[moveRow][moveColumn] = player[activePlayer].getPlayerNumber();
         totalMoveCount++;
-        player[activePlayer].increasePlayerMoveCount();
-    };
+    }
 
     function checkWin() {
         let moveResult = {roundEnd: false};
@@ -149,54 +136,20 @@ function createGameManager() {
                 }
             }
         }
-
         return moveResult;
     }
 
-    return {getBoard, getGameStatus, getCurrentRound, getMoveCounts, getPlayers, getActivePlayer, makeMove, restartGame};
+    return {getBoard, getGameStatus, getCurrentRound, getMoveCounts, getPlayers, getActivePlayer, makeMove, newRound, restartGame};
 }
 
 function createDisplayManager() {
     const board = document.querySelector('#board');
     const resultDisplay = document.querySelector('#round-result');
+    const buttons = document.querySelector('.buttons');
+    const scores = document.querySelectorAll('.count > p');
 
-    board.addEventListener('click', event => {
-        if (gameManager.getGameStatus() !== true) {
-            return;
-        }
-        if (event.target.classList.contains('cell')) {
-            toggleBoardEventListeners();
-
-            const cell = event.target;
-            const rowParent = cell.parentNode;
-
-            const moveColumn = Array.from(rowParent.children).indexOf(cell);
-            const moveRow = Array.from(rowParent.parentNode.children).indexOf(rowParent);
-
-            const player = gameManager.getActivePlayer();
-            const roundResult = gameManager.makeMove(moveRow, moveColumn);
-
-            if (roundResult === false) {
-                toggleBoardEventListeners();
-                return;
-            } else {
-                const playerMarker = gameManager.getPlayers()[player].playerMarker;
-                markCell(cell, playerMarker);
-            }
-
-            if (roundResult.gameEnd === true) {
-                resultDisplay.textContent = `Player ${roundResult.winner + 1} won the game!`;
-            } else if (roundResult.winner !== null) {
-                resultDisplay.textContent = `Player ${roundResult.winner + 1} won the round!`;
-                clearBoard();
-            }
-
-            toggleBoardEventListeners();
-        }
-    });
-
-    function toggleBoardEventListeners() {
-        board.classList.toggle('disabled');
+    function toggleBoardEventListeners(state) {
+        board.style.pointerEvents = state;
     }
 
     function markCell(cell, playerMarker) {
@@ -209,6 +162,73 @@ function createDisplayManager() {
             console.log(cell.classList);
         });
     }
+
+    function processMove(event) {
+        if (gameManager.getGameStatus() !== true) {
+            return;
+        }
+        if (event.target.classList.contains('cell')) {
+            toggleBoardEventListeners('none');
+
+            // Use gameManager to make the move and return results and then analyze the results
+            const cell = event.target;
+            const rowParent = cell.parentNode;
+
+            const moveColumn = Array.from(rowParent.children).indexOf(cell);
+            const moveRow = Array.from(rowParent.parentNode.children).indexOf(rowParent);
+
+            const moveByPlayer = gameManager.getActivePlayer();
+            const roundResult = gameManager.makeMove(moveRow, moveColumn);
+
+            if (roundResult === false) {
+                toggleBoardEventListeners('initial');
+                return;
+            } else {
+                const playerMarker = gameManager.getPlayers()[moveByPlayer].playerMarker;
+                markCell(cell, playerMarker);
+            }
+
+            // Board event listeners will stay turned off if the round ended until new round starts
+            if (roundResult.roundEnd === true) {
+                if (roundResult.winner !== null) {
+                    const player = gameManager.getPlayers()[roundResult.winner];
+                    scores[roundResult.winner === 1 ? 2 : 0].textContent = player.getPlayerWinCount();
+                    resultDisplay.textContent = `${player.getPlayerName()} won the round!`;
+                } else {
+                    scores[1].textContent = Number(scores[1].textContent) + 1;
+                    resultDisplay.textContent = 'It\'s a tie!';
+                }
+            } else {
+                toggleBoardEventListeners('initial');
+            }
+        }
+    }
+
+    function startNewRound() {
+        clearBoard();
+        gameManager.newRound();
+        resultDisplay.textContent = '';
+        toggleBoardEventListeners('initial');
+    }
+
+    function restartGame() {
+        clearBoard();
+        gameManager.restartGame();
+        scores.forEach(score => score.textContent = '0');
+        resultDisplay.textContent = '';
+        toggleBoardEventListeners('initial');
+    }
+
+    board.addEventListener('click', event => processMove(event));
+
+    buttons.addEventListener('click', event => {
+        const target = event.target;
+        if (target.id === 'new-round') {
+            startNewRound();
+        } else if (target.id === 'restart-game') {
+            restartGame();
+        }
+    });
 
     return {markCell};
 }

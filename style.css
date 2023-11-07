@@ -83,12 +83,12 @@ main {
     cursor: pointer;
 }
 
-.cell:not(.x):not(.o):hover, .restart-button:hover {
+.cell:not(.x):not(.o):hover, .game-button:hover {
     border-color: #000;
     transform: scale(102%);
 }
 
-.cell:not(.x):not(.o):active, .restart-button:active {
+.cell:not(.x):not(.o):active, .game-button:active {
     transform: scale(99%) translateY(2px);
 }
 
@@ -102,16 +102,17 @@ main {
 
 .counts {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    width: max(50%, 300px);
+    grid-template-columns: repeat(3, 150px);
+    /* width: max(50%, 300px); */
     margin: 2rem auto;
-    place-items: center;
+    justify-content: center;
+    justify-items: center;
     text-align: center;
 }
 
 .count {
     height: 100%;
-    width: 90%;
+    width: min(150px, 80%);
     border: 2px solid var(--dark-color);
     border-radius: 10px;
     padding: 0.5rem 0;
@@ -124,10 +125,9 @@ main {
     text-transform: uppercase;
 }
 
-.restart-button {
+.game-button {
+    display: inline-block;
     cursor: pointer;
-    display: block;
-    margin: auto;
     padding: 1rem 1.5rem;
     font-size: 1.2rem;
     font-weight: 600;
@@ -139,6 +139,10 @@ main {
     transition: 150ms all ease-in-out;
 }
 
-.disabled {
-    pointer-events: none;
+.buttons {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: auto;
+    gap: 2rem;
 }
