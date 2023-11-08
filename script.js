@@ -1,3 +1,4 @@
+// Factory function that returns methods to manages a new player object
 function createPlayer(playerNumber) {
     let number = playerNumber, winCount = 0;
     const playerMarker = playerNumber === 0 ? 'x' : 'o';
@@ -21,7 +22,7 @@ function createPlayer(playerNumber) {
     return {playerMarker, getPlayerNumber, getPlayerWinCount, increasePlayerWinCount, reset};
 }
 
-// Manages all the functions related to playing the game
+// Module that manages all the functions related to playing the game
 const gameManager = (function () {
     // Two dimensional array of empty items that can be accessed by gameBoard[row][column] (both are indexed from 0)
     let gameBoard = [[, , ,], [, , ,], [, , ,]];
@@ -59,15 +60,7 @@ const gameManager = (function () {
 
     const getBoard = () => gameBoard;
 
-    const getMoveCounts = () => {
-        return {
-            totalMoveCount: totalMoveCount,
-            playerOneMoveCount: player[0].getPlayerMoveCount(),
-            playerTwoMoveCount: player[1].getPlayerMoveCount()
-        };
-    };
-
-    const getPlayers = () => player;
+    const getPlayer = playerNumber => player[playerNumber];
     const getActivePlayer = () => activePlayer;
 
     const makeMove = (moveRow, moveColumn) => {
@@ -79,8 +72,6 @@ const gameManager = (function () {
 
         // Check for winner after registering move
         const moveResult = checkWin();
-
-        const resultObject = Object.assign({}, moveResult);
 
         // Update active player
         updateActivePlayer();
@@ -94,7 +85,7 @@ const gameManager = (function () {
             toggleGameStatus(false);
         }
 
-        return resultObject;
+        return moveResult;
     };
 
     function toggleGameStatus(status) {
@@ -141,10 +132,10 @@ const gameManager = (function () {
         return moveResult;
     }
 
-    return {getGameStatus, getCurrentRound, getMoveCounts, getPlayers, getActivePlayer, makeMove, newRound, restartGame};
+    return {getGameStatus, getCurrentRound, getPlayer, getActivePlayer, makeMove, newRound, restartGame};
 })();
 
-// Manages all the functions related to changing the display
+// Module that manages all the functions related to changing the display
 const displayManager = (function () {
     const board = document.querySelector('#board');
     const resultDisplay = document.querySelector('#round-result');
@@ -186,14 +177,14 @@ const displayManager = (function () {
                 toggleBoardEventListeners('initial');
                 return;
             } else {
-                const playerMarker = gameManager.getPlayers()[moveByPlayer].playerMarker;
+                const playerMarker = gameManager.getPlayer(moveByPlayer).playerMarker;
                 markCell(cell, playerMarker);
             }
 
             // Board event listeners will stay turned off if the round ended until new round starts
             if (moveResult.roundEnd === true) {
                 if (moveResult.winner !== null) {
-                    const player = gameManager.getPlayers()[moveResult.winner];
+                    const player = gameManager.getPlayer(moveResult.winner);
                     scores[moveResult.winner === 1 ? 2 : 0].textContent = player.getPlayerWinCount();
                     resultDisplay.textContent = `Player ${moveResult.winner + 1} won the round!`;
                 } else {
@@ -225,16 +216,19 @@ const displayManager = (function () {
         toggleBoardEventListeners('initial');
     }
 
-    return {board, buttons, processMove, startNewRound, restartGame};
+    const setEventListeners = () => {
+        board.addEventListener('click', event => processMove(event));
+        buttons.addEventListener('click', event => {
+            const target = event.target;
+            if (target.id === 'new-round') {
+                startNewRound();
+            } else if (target.id === 'restart-game') {
+                restartGame();
+            }
+        });
+    };
+
+    return {setEventListeners};
 })();
 
-displayManager.board.addEventListener('click', event => displayManager.processMove(event));
-
-displayManager.buttons.addEventListener('click', event => {
-    const target = event.target;
-    if (target.id === 'new-round') {
-        displayManager.startNewRound();
-    } else if (target.id === 'restart-game') {
-        displayManager.restartGame();
-    }
-});
+displayManager.setEventListeners();
