@@ -9,4 +9,4 @@ A live preview for this project is available [here](https://sh4dman23.github.io/
 Distributed under MIT License. See [LICENSE](./LICENSE) for more information.
 
 ## Acknowledgements
-- [The Odin Project](https://www.theodinproject.com)
+- This project was done as a part of [The Odin Project](https://www.theodinproject.com)
